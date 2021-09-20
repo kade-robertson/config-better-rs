@@ -17,7 +17,7 @@ impl OverridableEnv {
     }
 
     pub fn get(&self, key: &str) -> Result<String, VarError> {
-        if self.env_map.contains_key(&key.to_string()) {
+        if cfg!(test) && self.env_map.contains_key(&key.to_string()) {
             Ok(self.env_map.get(&key.to_string()).unwrap().clone())
         } else {
             std::env::var(key)
