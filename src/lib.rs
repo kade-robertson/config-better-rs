@@ -1,5 +1,6 @@
 use std::{
-    fmt,
+    error::Error,
+    fmt, fs,
     path::{Path, PathBuf},
 };
 
@@ -11,6 +12,12 @@ pub struct Config {
     cache_dir: PathBuf,
     config_dir: PathBuf,
     data_dir: PathBuf,
+}
+
+pub struct CreateRemoveResult {
+    pub cache: bool,
+    pub config: bool,
+    pub data: bool,
 }
 
 impl Config {
@@ -67,6 +74,68 @@ impl Config {
     pub fn new(app_name: &str) -> Config {
         Config::_init(app_name, std::env::consts::OS, env::OverridableEnv::new())
     }
+
+    pub fn make_dirs(&self) -> CreateRemoveResult {
+        let mut result = CreateRemoveResult {
+            cache: true,
+            config: true,
+            data: true,
+        };
+
+        if !&self.cache_dir.exists() {
+            match fs::create_dir_all(self.cache_dir.as_path()) {
+                Ok(()) => (),
+                Err(_) => result.cache = false,
+            }
+        }
+
+        if !&self.config_dir.exists() {
+            match fs::create_dir_all(self.config_dir.as_path()) {
+                Ok(()) => (),
+                Err(_) => result.config = false,
+            }
+        }
+
+        if !&self.data_dir.exists() {
+            match fs::create_dir_all(self.data_dir.as_path()) {
+                Ok(()) => (),
+                Err(_) => result.data = false,
+            }
+        }
+
+        return result;
+    }
+
+    pub fn rm_dirs(&self) -> CreateRemoveResult {
+        let mut result = CreateRemoveResult {
+            cache: true,
+            config: true,
+            data: true,
+        };
+
+        if self.cache_dir.exists() {
+            match fs::remove_dir_all(self.cache_dir.as_path()) {
+                Ok(()) => (),
+                Err(_) => result.cache = false,
+            }
+        }
+
+        if self.config_dir.exists() {
+            match fs::remove_dir_all(self.config_dir.as_path()) {
+                Ok(()) => (),
+                Err(_) => result.config = false,
+            }
+        }
+
+        if self.data_dir.exists() {
+            match fs::remove_dir_all(self.data_dir.as_path()) {
+                Ok(()) => (),
+                Err(_) => result.data = false,
+            }
+        }
+
+        return result;
+    }
 }
 
 impl fmt::Debug for Config {
@@ -81,32 +150,41 @@ impl fmt::Debug for Config {
 
 #[cfg(test)]
 mod tests {
+    use rand::{distributions::Alphanumeric, Rng};
     use std::env;
 
     use crate::{env::OverridableEnv, Config};
 
-    fn get_windows_config() -> Config {
+    fn clean_xdg_env() {
         env::remove_var("XDG_CACHE_HOME");
         env::remove_var("XDG_CONFIG_HOME");
         env::remove_var("XDG_DATA_HOME");
+    }
+
+    fn get_random_string() -> String {
+        rand::thread_rng()
+            .sample_iter(&Alphanumeric)
+            .take(12)
+            .map(char::from)
+            .collect()
+    }
+
+    fn get_windows_config() -> Config {
+        clean_xdg_env();
         let mut env = OverridableEnv::new();
         env.add("APPDATA", "/appdata");
         Config::_init("app-name", "windows", env)
     }
 
     fn get_macos_config() -> Config {
-        env::remove_var("XDG_CACHE_HOME");
-        env::remove_var("XDG_CONFIG_HOME");
-        env::remove_var("XDG_DATA_HOME");
+        clean_xdg_env();
         let mut env = OverridableEnv::new();
         env.add("HOME", "/home/user");
         Config::_init("app-name", "macos", env)
     }
 
     fn get_linux_config() -> Config {
-        env::remove_var("XDG_CACHE_HOME");
-        env::remove_var("XDG_CONFIG_HOME");
-        env::remove_var("XDG_DATA_HOME");
+        clean_xdg_env();
         let mut env = OverridableEnv::new();
         env.add("HOME", "/home/user");
         Config::_init("app-name", "linux", env)
@@ -213,5 +291,19 @@ mod tests {
             config.data_dir.to_str().unwrap(),
             "/home/user/.local/share/app-name"
         );
+    }
+
+    #[test]
+    fn it_creates_and_removes_directories() {
+        clean_xdg_env();
+        let config = Config::new(&get_random_string());
+        let create_result = config.make_dirs();
+        assert_eq!(create_result.cache, true);
+        assert_eq!(create_result.config, true);
+        assert_eq!(create_result.data, true);
+        let remove_result = config.rm_dirs();
+        assert_eq!(remove_result.cache, true);
+        assert_eq!(remove_result.config, true);
+        assert_eq!(remove_result.data, true);
     }
 }
