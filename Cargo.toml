@@ -2,6 +2,13 @@
 name = "config-better"
 version = "0.1.0"
 edition = "2018"
+license = "MIT"
+description = "Configure your application in a friendlier and more consistent way!"
+homepage = "https://github.com/kade-robertson/config-better-rs"
+repository = "https://github.com/kade-robertson/config-better-rs"
+readme = "README.md"
+keywords = ["config-better", "config", "xdg"]
+categories = ["config", "filesystem"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [dev-dependencies]
