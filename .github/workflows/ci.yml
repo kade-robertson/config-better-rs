@@ -5,8 +5,8 @@ on:
     branches: [ master ]
 
 jobs:
-  release_builds:
-    name: uggo
+  test:
+    name: config-better-rs
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
