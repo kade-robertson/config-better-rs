@@ -16,7 +16,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        rust-version: [1.56.0, stable]
+        rust-version: [stable]
     steps:
       - uses: actions/checkout@v3
 
@@ -31,6 +31,30 @@ jobs:
 
       - name: Test
         run: cargo test
+
+      - name: Publish
+        run: cargo publish --dry-run
+  build:
+    name: build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        rust-version: [1.60.0, stable]
+    steps:
+      - uses: actions/checkout@v3
+
+      - id: toolchain
+        name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.rust-version }}
+
+      - name: Run sccache-cache
+        uses: mozilla-actions/sccache-action@v0.0.3
+
+      - name: Publish
+        run: cargo build --release
 
       - name: Publish
         run: cargo publish --dry-run

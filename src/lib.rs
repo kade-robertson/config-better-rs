@@ -3,10 +3,6 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use env::OverridableEnv;
-
-mod env;
-
 pub struct Config {
     cache_dir: PathBuf,
     config_dir: PathBuf,
@@ -20,48 +16,48 @@ pub struct CreateRemoveResult {
 }
 
 impl Config {
-    fn _init(app_name: &str, os: &str, env: OverridableEnv) -> Config {
+    fn _init(app_name: &str, os: &str) -> Config {
         Config {
-            cache_dir: match env.get("XDG_CACHE_HOME") {
+            cache_dir: match std::env::var("XDG_CACHE_HOME") {
                 Ok(dir) => Path::new(&dir).join(app_name),
                 Err(_) => match os {
-                    "windows" => Path::new(&env.get("APPDATA").unwrap_or(".".to_string()))
+                    "windows" => Path::new(&std::env::var("APPDATA").unwrap_or(".".to_string()))
                         .join(app_name)
                         .join("Cache"),
-                    "macos" => Path::new(&env.get("HOME").unwrap_or(".".to_string()))
+                    "macos" => Path::new(&std::env::var("HOME").unwrap_or(".".to_string()))
                         .join("Library")
                         .join("Caches")
                         .join(app_name),
-                    _ => Path::new(&env.get("HOME").unwrap_or(".".to_string()))
+                    _ => Path::new(&std::env::var("HOME").unwrap_or(".".to_string()))
                         .join(".cache")
                         .join(app_name),
                 },
             },
-            config_dir: match env.get("XDG_CONFIG_HOME") {
+            config_dir: match std::env::var("XDG_CONFIG_HOME") {
                 Ok(dir) => Path::new(&dir).join(app_name),
                 Err(_) => match os {
-                    "windows" => Path::new(&env.get("APPDATA").unwrap_or(".".to_string()))
+                    "windows" => Path::new(&std::env::var("APPDATA").unwrap_or(".".to_string()))
                         .join(app_name)
                         .join("Config"),
-                    "macos" => Path::new(&env.get("HOME").unwrap_or(".".to_string()))
+                    "macos" => Path::new(&std::env::var("HOME").unwrap_or(".".to_string()))
                         .join("Library")
                         .join("Preferences")
                         .join(app_name),
-                    _ => Path::new(&env.get("HOME").unwrap_or(".".to_string()))
+                    _ => Path::new(&std::env::var("HOME").unwrap_or(".".to_string()))
                         .join(".config")
                         .join(app_name),
                 },
             },
-            data_dir: match env.get("XDG_DATA_HOME") {
+            data_dir: match std::env::var("XDG_DATA_HOME") {
                 Ok(dir) => Path::new(&dir).join(app_name),
                 Err(_) => match os {
-                    "windows" => Path::new(&env.get("APPDATA").unwrap_or(".".to_string()))
+                    "windows" => Path::new(&std::env::var("APPDATA").unwrap_or(".".to_string()))
                         .join(app_name)
                         .join("Data"),
-                    "macos" => Path::new(&env.get("HOME").unwrap_or(".".to_string()))
+                    "macos" => Path::new(&std::env::var("HOME").unwrap_or(".".to_string()))
                         .join("Library")
                         .join(app_name),
-                    _ => Path::new(&env.get("HOME").unwrap_or(".".to_string()))
+                    _ => Path::new(&std::env::var("HOME").unwrap_or(".".to_string()))
                         .join(".local")
                         .join("share")
                         .join(app_name),
@@ -78,7 +74,7 @@ impl Config {
     /// * `app_name` - The name of your application, to be used to determine the
     /// sub-folder your app cache/config/data belongs in.
     pub fn new(app_name: &str) -> Config {
-        Config::_init(app_name, std::env::consts::OS, env::OverridableEnv::new())
+        Config::_init(app_name, std::env::consts::OS)
     }
 
     /// Returns a &PathBuf pointed at the appropriate directory to use for
@@ -205,20 +201,13 @@ impl fmt::Debug for Config {
 #[cfg(test)]
 mod tests {
     use rand::{distributions::Alphanumeric, Rng};
-    use std::env;
 
-    use crate::{env::OverridableEnv, Config};
+    use crate::Config;
 
     macro_rules! path {
         ($path:expr) => {
             $path.replace("/", &std::path::MAIN_SEPARATOR.to_string())
         };
-    }
-
-    fn clean_xdg_env() {
-        env::remove_var("XDG_CACHE_HOME");
-        env::remove_var("XDG_CONFIG_HOME");
-        env::remove_var("XDG_DATA_HOME");
     }
 
     fn get_random_string() -> String {
@@ -229,150 +218,183 @@ mod tests {
             .collect()
     }
 
-    fn get_windows_config() -> Config {
-        clean_xdg_env();
-        let mut env = OverridableEnv::new();
-        env.add("APPDATA", &path!("/appdata"));
-        Config::_init("app-name", "windows", env)
+    fn with_windows_config<F>(closure: F)
+    where
+        F: FnOnce(Config) + Copy,
+    {
+        temp_env::with_vars(
+            [
+                ("APPDATA", Some(&path!("/appdata"))),
+                ("XDG_CONFIG_HOME", None),
+                ("XDG_CACHE_HOME", None),
+                ("XDG_DATA_HOME", None),
+            ],
+            || closure(Config::_init("app-name", "windows")),
+        );
     }
 
-    fn get_macos_config() -> Config {
-        clean_xdg_env();
-        let mut env = OverridableEnv::new();
-        env.add("HOME", &path!("/home/user"));
-        Config::_init("app-name", "macos", env)
+    fn with_macos_config<F>(closure: F)
+    where
+        F: FnOnce(Config) + Copy,
+    {
+        temp_env::with_vars(
+            [
+                ("HOME", Some(&path!("/home/user"))),
+                ("XDG_CONFIG_HOME", None),
+                ("XDG_CACHE_HOME", None),
+                ("XDG_DATA_HOME", None),
+            ],
+            || closure(Config::_init("app-name", "macos")),
+        );
     }
 
-    fn get_linux_config() -> Config {
-        clean_xdg_env();
-        let mut env = OverridableEnv::new();
-        env.add("HOME", &path!("/home/user"));
-        Config::_init("app-name", "linux", env)
+    fn with_linux_config<F>(closure: F)
+    where
+        F: FnOnce(Config) + Copy,
+    {
+        temp_env::with_vars(
+            [
+                ("HOME", Some(&path!("/home/user"))),
+                ("XDG_CONFIG_HOME", None),
+                ("XDG_CACHE_HOME", None),
+                ("XDG_DATA_HOME", None),
+            ],
+            || closure(Config::_init("app-name", "linux")),
+        );
     }
 
     #[test]
     fn it_respects_xdg_cache_home() {
-        let mut env = OverridableEnv::new();
-        env.add("XDG_CACHE_HOME", &path!("/tmp/cache"));
-        let config = Config::_init("app-name", "any", env);
-        assert_eq!(
-            config.cache().to_str().unwrap(),
-            path!("/tmp/cache/app-name")
-        );
+        temp_env::with_vars([("XDG_CACHE_HOME", Some(path!("/tmp/cache")))], || {
+            let config = Config::_init("app-name", "any");
+            assert_eq!(
+                config.cache().to_str().unwrap(),
+                path!("/tmp/cache/app-name")
+            );
+        });
     }
 
     #[test]
     fn it_uses_expected_windows_cache_path() {
-        let config = get_windows_config();
-        assert_eq!(
-            config.cache().to_str().unwrap(),
-            path!("/appdata/app-name/Cache")
-        );
+        with_windows_config(|c| {
+            assert_eq!(
+                c.cache().to_str().unwrap(),
+                path!("/appdata/app-name/Cache")
+            );
+        });
     }
 
     #[test]
     fn it_uses_expected_macos_cache_path() {
-        let config = get_macos_config();
-        assert_eq!(
-            config.cache().to_str().unwrap(),
-            path!("/home/user/Library/Caches/app-name")
-        );
+        with_macos_config(|c| {
+            assert_eq!(
+                c.cache().to_str().unwrap(),
+                path!("/home/user/Library/Caches/app-name")
+            );
+        });
     }
 
     #[test]
     fn it_uses_expected_linux_cache_path() {
-        let config = get_linux_config();
-        assert_eq!(
-            config.cache().to_str().unwrap(),
-            path!("/home/user/.cache/app-name")
-        );
+        with_linux_config(|c| {
+            assert_eq!(
+                c.cache().to_str().unwrap(),
+                path!("/home/user/.cache/app-name")
+            );
+        });
     }
 
     #[test]
     fn it_respects_xdg_config_home() {
-        let mut env = OverridableEnv::new();
-        env.add("XDG_CONFIG_HOME", &path!("/tmp/config"));
-        let config = Config::_init("app-name", "any", env);
-        assert_eq!(
-            config.config().to_str().unwrap(),
-            path!("/tmp/config/app-name")
-        );
+        temp_env::with_vars([("XDG_CONFIG_HOME", Some(path!("/tmp/config")))], || {
+            let config = Config::_init("app-name", "any");
+            assert_eq!(
+                config.config().to_str().unwrap(),
+                path!("/tmp/config/app-name")
+            );
+        });
     }
 
     #[test]
     fn it_uses_expected_windows_config_path() {
-        let config = get_windows_config();
-        println!("{:?}", config);
-        assert_eq!(
-            config.config().to_str().unwrap(),
-            path!("/appdata/app-name/Config")
-        );
+        with_windows_config(|c| {
+            assert_eq!(
+                c.config().to_str().unwrap(),
+                path!("/appdata/app-name/Config")
+            );
+        });
     }
 
     #[test]
     fn it_uses_expected_macos_config_path() {
-        let config = get_macos_config();
-        assert_eq!(
-            config.config().to_str().unwrap(),
-            path!("/home/user/Library/Preferences/app-name")
-        );
+        with_macos_config(|c| {
+            assert_eq!(
+                c.config().to_str().unwrap(),
+                path!("/home/user/Library/Preferences/app-name")
+            );
+        });
     }
 
     #[test]
     fn it_uses_expected_linux_config_path() {
-        let config = get_linux_config();
-        assert_eq!(
-            config.config().to_str().unwrap(),
-            path!("/home/user/.config/app-name")
-        );
+        with_linux_config(|c| {
+            assert_eq!(
+                c.config().to_str().unwrap(),
+                path!("/home/user/.config/app-name")
+            );
+        });
     }
 
     #[test]
     fn it_respects_xdg_data_home() {
-        let mut env = OverridableEnv::new();
-        env.add("XDG_DATA_HOME", &path!("/tmp/data"));
-        let config = Config::_init("app-name", "any", env);
-        assert_eq!(config.data().to_str().unwrap(), path!("/tmp/data/app-name"));
+        temp_env::with_vars([("XDG_DATA_HOME", Some(path!("/tmp/data")))], || {
+            let config = Config::_init("app-name", "any");
+            assert_eq!(config.data().to_str().unwrap(), path!("/tmp/data/app-name"));
+        });
     }
 
     #[test]
     fn it_uses_expected_windows_data_path() {
-        let config = get_windows_config();
-        assert_eq!(
-            config.data().to_str().unwrap(),
-            path!("/appdata/app-name/Data")
-        );
+        with_windows_config(|c| {
+            assert_eq!(c.data().to_str().unwrap(), path!("/appdata/app-name/Data"));
+        });
     }
 
     #[test]
     fn it_uses_expected_macos_data_path() {
-        let config = get_macos_config();
-        assert_eq!(
-            config.data().to_str().unwrap(),
-            path!("/home/user/Library/app-name")
-        );
+        with_macos_config(|c| {
+            assert_eq!(
+                c.data().to_str().unwrap(),
+                path!("/home/user/Library/app-name")
+            );
+        });
     }
 
     #[test]
     fn it_uses_expected_linux_data_path() {
-        let config = get_linux_config();
-        assert_eq!(
-            config.data().to_str().unwrap(),
-            path!("/home/user/.local/share/app-name")
-        );
+        with_linux_config(|c| {
+            assert_eq!(
+                c.data().to_str().unwrap(),
+                path!("/home/user/.local/share/app-name")
+            );
+        });
     }
 
     #[test]
     fn it_creates_and_removes_directories() {
-        clean_xdg_env();
-        let config = Config::new(&get_random_string());
-        let create_result = config.make_dirs();
-        assert!(create_result.cache);
-        assert!(create_result.config);
-        assert!(create_result.data);
-        let remove_result = config.rm_dirs();
-        assert!(remove_result.cache);
-        assert!(remove_result.config);
-        assert!(remove_result.data);
+        temp_env::with_vars_unset(
+            ["XDG_CACHE_HOME", "XDG_CONFIG_HOME", "XDG_DATA_HOME"],
+            || {
+                let config = Config::new(&get_random_string());
+                let create_result = config.make_dirs();
+                assert!(create_result.cache);
+                assert!(create_result.config);
+                assert!(create_result.data);
+                let remove_result = config.rm_dirs();
+                assert!(remove_result.cache);
+                assert!(remove_result.config);
+                assert!(remove_result.data);
+            },
+        );
     }
 }

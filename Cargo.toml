@@ -2,7 +2,7 @@
 name = "config-better"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.56.0"
+rust-version = "1.60.0"
 license = "MIT"
 description = "Configure your application in a friendlier and more consistent way!"
 homepage = "https://github.com/kade-robertson/config-better-rs"
@@ -14,3 +14,4 @@ categories = ["config", "filesystem"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [dev-dependencies]
 rand = "0.8.4"
+temp-env = "0.3.4"
