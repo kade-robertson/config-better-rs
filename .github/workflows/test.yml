@@ -50,7 +50,7 @@ jobs:
       - name: Run sccache-cache
         uses: mozilla-actions/sccache-action@v0.0.3
 
-      - name: Publish
+      - name: Build
         run: cargo build --release --all-features
 
       - name: Publish
