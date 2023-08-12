@@ -29,8 +29,11 @@ jobs:
       - name: Run sccache-cache
         uses: mozilla-actions/sccache-action@v0.0.3
 
-      - name: Test
-        run: cargo test --all-features
+      - name: Test (async-std)
+        run: cargo test --features sync,async
+
+      - name: Test (tokio)
+        run: cargo test --features sync,async-tokio
   build:
     name: build
     runs-on: ${{ matrix.os }}
