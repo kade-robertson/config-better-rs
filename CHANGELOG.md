@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/kade-robertson/config-better-rs/compare/v1.0.0...v1.1.0) (2023-08-12)
+
+
+### Features
+
+* support async-std ([#2](https://github.com/kade-robertson/config-better-rs/issues/2)) ([567f193](https://github.com/kade-robertson/config-better-rs/commit/567f193c9772344bf9905a012901e9f44bcc1b8a))
+
 ## [1.0.0](https://github.com/kade-robertson/config-better-rs/compare/v0.1.0...v1.0.0) (2023-08-12)
 
 
