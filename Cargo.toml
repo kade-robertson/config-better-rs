@@ -1,7 +1,8 @@
 [package]
 name = "config-better"
 version = "0.1.0"
-edition = "2018"
+edition = "2021"
+rust-version = "1.56.0"
 license = "MIT"
 description = "Configure your application in a friendlier and more consistent way!"
 homepage = "https://github.com/kade-robertson/config-better-rs"
