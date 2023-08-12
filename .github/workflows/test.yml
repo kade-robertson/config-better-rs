@@ -30,10 +30,7 @@ jobs:
         uses: mozilla-actions/sccache-action@v0.0.3
 
       - name: Test
-        run: cargo test
-
-      - name: Publish
-        run: cargo publish --dry-run
+        run: cargo test --all-features
   build:
     name: build
     runs-on: ${{ matrix.os }}
@@ -54,7 +51,7 @@ jobs:
         uses: mozilla-actions/sccache-action@v0.0.3
 
       - name: Publish
-        run: cargo build --release
+        run: cargo build --release --all-features
 
       - name: Publish
         run: cargo publish --dry-run
