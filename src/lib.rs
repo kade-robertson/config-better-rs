@@ -147,7 +147,7 @@ impl Config {
             }
         }
 
-        return result;
+        result
     }
 
     /// Attempts to remove all directories, and returns a CreateRemoveResult
@@ -184,7 +184,7 @@ impl Config {
             }
         }
 
-        return result;
+        result
     }
 }
 
