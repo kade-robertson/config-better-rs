@@ -2,6 +2,7 @@
   "bootstrap-sha": "82dbd221eb701ae6a0906c2443cb9f08eee90b0a",
   "last-release-sha": "82dbd221eb701ae6a0906c2443cb9f08eee90b0a",
   "release-type": "rust",
+  "include-component-in-tag": false,
   "packages": {
     ".": {}
   }
