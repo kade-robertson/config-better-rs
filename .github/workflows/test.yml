@@ -15,7 +15,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
       - uses: actions/checkout@v3
 
@@ -27,7 +27,7 @@ jobs:
         uses: mozilla-actions/sccache-action@v0.0.3
 
       - name: Test
-        run: cargo test --locked
+        run: cargo test
 
       - name: Publish
-        run: cargo publish --dry-run --locked
+        run: cargo publish --dry-run
