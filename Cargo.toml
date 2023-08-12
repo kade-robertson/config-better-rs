@@ -11,6 +11,9 @@ readme = "README.md"
 keywords = ["config-better", "config", "xdg"]
 categories = ["config", "filesystem"]
 
+[dependencies]
+thiserror = "1.0.44"
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [dev-dependencies]
 rand = "0.8.4"

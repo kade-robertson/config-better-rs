@@ -3,16 +3,14 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use errors::{CreateError, RemoveError};
+
+mod errors;
+
 pub struct Config {
     cache_dir: PathBuf,
     config_dir: PathBuf,
     data_dir: PathBuf,
-}
-
-pub struct CreateRemoveResult {
-    pub cache: bool,
-    pub config: bool,
-    pub data: bool,
 }
 
 impl Config {
@@ -113,78 +111,24 @@ impl Config {
         &self.data_dir
     }
 
-    /// Attempts to create all directories, and returns a CreateRemoveResult
-    /// indicating whether each individual directory was successfully created.
-    ///
-    /// Note: One of the result entries being `true` either indicates this
-    /// created the directory, or the directory already existed and thus this
-    /// did not need to create the directory again.
-    pub fn make_dirs(&self) -> CreateRemoveResult {
-        let mut result = CreateRemoveResult {
-            cache: true,
-            config: true,
-            data: true,
-        };
+    /// Attempts to create all directories. The error produced indicates which
+    /// directory failed to be created first, in the order Cache -> Config -> Data.
+    pub fn make_dirs(&self) -> Result<(), CreateError> {
+        fs::create_dir_all(self.cache_dir.as_path()).map_err(CreateError::Cache)?;
+        fs::create_dir_all(self.config_dir.as_path()).map_err(CreateError::Config)?;
+        fs::create_dir_all(self.data_dir.as_path()).map_err(CreateError::Data)?;
 
-        if !&self.cache().exists() {
-            match fs::create_dir_all(self.cache_dir.as_path()) {
-                Ok(()) => (),
-                Err(_) => result.cache = false,
-            }
-        }
-
-        if !&self.config().exists() {
-            match fs::create_dir_all(self.config_dir.as_path()) {
-                Ok(()) => (),
-                Err(_) => result.config = false,
-            }
-        }
-
-        if !&self.data().exists() {
-            match fs::create_dir_all(self.data_dir.as_path()) {
-                Ok(()) => (),
-                Err(_) => result.data = false,
-            }
-        }
-
-        result
+        Ok(())
     }
 
-    /// Attempts to remove all directories, and returns a CreateRemoveResult
-    /// indicating whether each individual directory was successfully removed.
-    ///
-    /// Note: One of the result entries being `true` either indicates this
-    /// removed the directory, or the directory already did not exist and thus
-    /// this did not need to attempt removal.
-    pub fn rm_dirs(&self) -> CreateRemoveResult {
-        let mut result = CreateRemoveResult {
-            cache: true,
-            config: true,
-            data: true,
-        };
+    /// Attemps to remove all directories. The error produced indicates which
+    /// directory failed to be removed first, in the order Cache -> Config -> Data.
+    pub fn rm_dirs(&self) -> Result<(), RemoveError> {
+        fs::remove_dir_all(self.cache_dir.as_path()).map_err(RemoveError::Cache)?;
+        fs::remove_dir_all(self.config_dir.as_path()).map_err(RemoveError::Config)?;
+        fs::remove_dir_all(self.data_dir.as_path()).map_err(RemoveError::Data)?;
 
-        if self.cache().exists() {
-            match fs::remove_dir_all(self.cache_dir.as_path()) {
-                Ok(()) => (),
-                Err(_) => result.cache = false,
-            }
-        }
-
-        if self.config().exists() {
-            match fs::remove_dir_all(self.config_dir.as_path()) {
-                Ok(()) => (),
-                Err(_) => result.config = false,
-            }
-        }
-
-        if self.data().exists() {
-            match fs::remove_dir_all(self.data_dir.as_path()) {
-                Ok(()) => (),
-                Err(_) => result.data = false,
-            }
-        }
-
-        result
+        Ok(())
     }
 }
 
@@ -387,13 +331,9 @@ mod tests {
             || {
                 let config = Config::new(&get_random_string());
                 let create_result = config.make_dirs();
-                assert!(create_result.cache);
-                assert!(create_result.config);
-                assert!(create_result.data);
+                assert!(create_result.is_ok());
                 let remove_result = config.rm_dirs();
-                assert!(remove_result.cache);
-                assert!(remove_result.config);
-                assert!(remove_result.data);
+                assert!(remove_result.is_ok());
             },
         );
     }
