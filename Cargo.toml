@@ -18,3 +18,7 @@ thiserror = "1.0.44"
 [dev-dependencies]
 rand = "0.8.4"
 temp-env = "0.3.4"
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]

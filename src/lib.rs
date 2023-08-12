@@ -1,3 +1,6 @@
+#![cfg_attr(docsrs, feature(doc_cfg))]
+#![doc = include_str!("../README.md")]
+
 use std::{
     fmt::{self, Display},
     fs,
@@ -126,7 +129,7 @@ impl Config {
 
     /// Attempts to create all directories. The error produced indicates which
     /// directory failed to be created first, in the order Cache -> Config -> Data.
-    pub fn make_dirs(&self) -> Result<(), CreateError> {
+    pub fn create_all(&self) -> Result<(), CreateError> {
         self.cache.create().map_err(CreateError::Cache)?;
         self.config.create().map_err(CreateError::Config)?;
         self.data.create().map_err(CreateError::Data)?;
@@ -136,7 +139,7 @@ impl Config {
 
     /// Attemps to remove all directories. The error produced indicates which
     /// directory failed to be removed first, in the order Cache -> Config -> Data.
-    pub fn rm_dirs(&self) -> Result<(), RemoveError> {
+    pub fn remove_all(&self) -> Result<(), RemoveError> {
         self.cache.remove().map_err(RemoveError::Cache)?;
         self.config.remove().map_err(RemoveError::Config)?;
         self.data.remove().map_err(RemoveError::Data)?;
@@ -322,9 +325,9 @@ mod tests {
             ["XDG_CACHE_HOME", "XDG_CONFIG_HOME", "XDG_DATA_HOME"],
             || {
                 let config = Config::new(&get_random_string());
-                let create_result = config.make_dirs();
+                let create_result = config.create_all();
                 assert!(create_result.is_ok());
-                let remove_result = config.rm_dirs();
+                let remove_result = config.remove_all();
                 assert!(remove_result.is_ok());
             },
         );

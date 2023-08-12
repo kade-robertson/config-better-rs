@@ -16,13 +16,17 @@ fn main() {
     println!("{:?}", dirs);
 
     // View paths
-    println!("{:?}", dirs.cache());
-    println!("{:?}", dirs.config());
-    println!("{:?}", dirs.data());
+    println!("{:?}", dirs.cache);
+    println!("{:?}", dirs.config);
+    println!("{:?}", dirs.data);
 
-    // Create/delete directories
-    dirs.make_dirs();
-    dirs.rm_dirs();
+    // Create/delete a single directory
+    dirs.cache.create();
+    dirs.cache.remove();
+
+    // Create/delete all directories
+    dirs.create_all();
+    dirs.remove_all();
 }
 ```
 
