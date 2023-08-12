@@ -13,11 +13,13 @@ categories = ["config", "filesystem"]
 
 [dependencies]
 tokio = { version = "1.31.0", optional = true, features = ["fs"] }
+async-std = { version = "1.12.0", optional = true }
 thiserror = "1.0.44"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [dev-dependencies]
 tokio = { version = "1.31.0", features = ["fs", "macros", "rt"] }
+async-std = "1.12.0"
 rand = "0.8.4"
 temp-env = "0.3.4"
 tokio-test = "0.4.2"
@@ -25,7 +27,8 @@ tokio-test = "0.4.2"
 [features]
 default = ["sync"]
 sync = []
-async = ["tokio"]
+async = ["async-std"]
+async-tokio = ["tokio"]
 
 [package.metadata.docs.rs]
 all-features = true

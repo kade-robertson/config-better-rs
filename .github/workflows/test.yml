@@ -38,12 +38,14 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
         rust-version: [1.60.0, 1.63.0, stable]
-        features: ["sync", "async"]
+        features: ["sync", "async", "async-tokio"]
         exclude:
           - rust-version: 1.60.0
-            features: "async"
+            features: "async-tokio"
           - rust-version: 1.63.0
             features: "sync"
+          - rust-version: 1.63.0
+            features: "async"
     steps:
       - uses: actions/checkout@v3
 

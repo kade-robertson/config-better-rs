@@ -26,13 +26,19 @@ impl Directory {
 }
 
 #[cfg(feature = "async")]
+use async_std::fs::create_dir_all as create_dir_all_async;
+
+#[cfg(all(not(feature = "async"), feature = "async-tokio"))]
+use tokio::fs::create_dir_all as create_dir_all_async;
+
+#[cfg(any(feature = "async", feature = "async-tokio"))]
 impl Directory {
     pub async fn create_async(&self) -> std::io::Result<()> {
-        tokio::fs::create_dir_all(&self.path).await
+        create_dir_all_async(&self.path).await
     }
 
     pub async fn remove_async(&self) -> std::io::Result<()> {
-        tokio::fs::remove_dir_all(&self.path).await
+        create_dir_all_async(&self.path).await
     }
 }
 
@@ -64,11 +70,19 @@ mod tests {
         assert!(dir.remove().is_ok());
     }
 
+    #[cfg(feature = "async-tokio")]
     #[tokio::test]
-    #[cfg(feature = "async")]
-    async fn test_create_remove_async() {
+    async fn test_create_remove_tokio() {
         let dir = Directory::new(std::env::temp_dir().join(get_random_string()));
         assert!(dir.create_async().await.is_ok());
         assert!(dir.remove_async().await.is_ok());
+    }
+
+    #[cfg(feature = "async")]
+    #[test]
+    fn test_create_remove_async_std() {
+        let dir = Directory::new(std::env::temp_dir().join(get_random_string()));
+        assert!(async_std::task::block_on(dir.create_async()).is_ok());
+        assert!(async_std::task::block_on(dir.remove_async()).is_ok());
     }
 }

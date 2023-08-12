@@ -1,6 +1,9 @@
 #![cfg_attr(docsrs, feature(doc_cfg))]
 #![doc = include_str!("../README.md")]
 
+#[cfg(all(feature = "async", feature = "async-tokio"))]
+compile_error!("Cannot enable both async and async-tokio features");
+
 use std::{fmt, path::Path};
 
 use directory::Directory;
@@ -121,7 +124,7 @@ impl Config {
     }
 }
 
-#[cfg(feature = "async")]
+#[cfg(any(feature = "async", feature = "async-tokio"))]
 impl Config {
     pub async fn create_all_async(&self) -> Result<(), CreateError> {
         self.cache
@@ -339,7 +342,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "async")]
+    #[cfg(any(feature = "async", feature = "async-tokio"))]
     fn it_creates_and_removes_directories_async() {
         temp_env::with_vars_unset(
             ["XDG_CACHE_HOME", "XDG_CONFIG_HOME", "XDG_DATA_HOME"],
