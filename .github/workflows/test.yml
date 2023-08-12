@@ -29,8 +29,11 @@ jobs:
       - name: Run sccache-cache
         uses: mozilla-actions/sccache-action@v0.0.3
 
-      - name: Test
-        run: cargo test --all-features
+      - name: Test (async-std)
+        run: cargo test --features sync,async
+
+      - name: Test (tokio)
+        run: cargo test --features sync,async-tokio
   build:
     name: build
     runs-on: ${{ matrix.os }}
@@ -38,12 +41,14 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
         rust-version: [1.60.0, 1.63.0, stable]
-        features: ["sync", "async"]
+        features: ["sync", "async", "async-tokio"]
         exclude:
           - rust-version: 1.60.0
-            features: "async"
+            features: "async-tokio"
           - rust-version: 1.63.0
             features: "sync"
+          - rust-version: 1.63.0
+            features: "async"
     steps:
       - uses: actions/checkout@v3
 

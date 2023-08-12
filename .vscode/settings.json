@@ -1,4 +1,4 @@
 {
-  "rust-analyzer.cargo.features": "all",
-  "rust-analyzer.check.features": "all"
+  "rust-analyzer.cargo.features": ["sync", "async"],
+  "rust-analyzer.check.features": ["sync", "async"]
 }
