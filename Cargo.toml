@@ -12,12 +12,20 @@ keywords = ["config-better", "config", "xdg"]
 categories = ["config", "filesystem"]
 
 [dependencies]
+tokio = { version = "1.29.1", optional = true, features = ["fs"] }
 thiserror = "1.0.44"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [dev-dependencies]
+tokio = { version = "1.29.1", features = ["fs", "macros", "rt"] }
 rand = "0.8.4"
 temp-env = "0.3.4"
+tokio-test = "0.4.2"
+
+[features]
+default = ["sync"]
+sync = []
+async = ["tokio"]
 
 [package.metadata.docs.rs]
 all-features = true

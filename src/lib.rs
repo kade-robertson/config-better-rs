@@ -1,40 +1,13 @@
 #![cfg_attr(docsrs, feature(doc_cfg))]
 #![doc = include_str!("../README.md")]
 
-use std::{
-    fmt::{self, Display},
-    fs,
-    path::{Path, PathBuf},
-};
+use std::{fmt, path::Path};
 
+use directory::Directory;
 use errors::{CreateError, RemoveError};
 
+mod directory;
 mod errors;
-
-#[derive(Debug, Clone)]
-pub struct Directory {
-    path: PathBuf,
-}
-
-impl Directory {
-    pub(crate) fn new(path: PathBuf) -> Directory {
-        Directory { path }
-    }
-
-    pub fn create(&self) -> std::io::Result<()> {
-        fs::create_dir_all(&self.path)
-    }
-
-    pub fn remove(&self) -> std::io::Result<()> {
-        fs::remove_dir_all(&self.path)
-    }
-}
-
-impl Display for Directory {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.path.display())
-    }
-}
 
 pub struct Config {
     /// The cache directory for your application.
@@ -143,6 +116,37 @@ impl Config {
         self.cache.remove().map_err(RemoveError::Cache)?;
         self.config.remove().map_err(RemoveError::Config)?;
         self.data.remove().map_err(RemoveError::Data)?;
+
+        Ok(())
+    }
+}
+
+#[cfg(feature = "async")]
+impl Config {
+    pub async fn create_all_async(&self) -> Result<(), CreateError> {
+        self.cache
+            .create_async()
+            .await
+            .map_err(CreateError::Cache)?;
+        self.config
+            .create_async()
+            .await
+            .map_err(CreateError::Config)?;
+        self.data.create_async().await.map_err(CreateError::Data)?;
+
+        Ok(())
+    }
+
+    pub async fn remove_all_async(&self) -> Result<(), RemoveError> {
+        self.cache
+            .remove_async()
+            .await
+            .map_err(RemoveError::Cache)?;
+        self.config
+            .remove_async()
+            .await
+            .map_err(RemoveError::Config)?;
+        self.data.remove_async().await.map_err(RemoveError::Data)?;
 
         Ok(())
     }
@@ -320,6 +324,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "sync")]
     fn it_creates_and_removes_directories() {
         temp_env::with_vars_unset(
             ["XDG_CACHE_HOME", "XDG_CONFIG_HOME", "XDG_DATA_HOME"],
@@ -328,6 +333,21 @@ mod tests {
                 let create_result = config.create_all();
                 assert!(create_result.is_ok());
                 let remove_result = config.remove_all();
+                assert!(remove_result.is_ok());
+            },
+        );
+    }
+
+    #[test]
+    #[cfg(feature = "async")]
+    fn it_creates_and_removes_directories_async() {
+        temp_env::with_vars_unset(
+            ["XDG_CACHE_HOME", "XDG_CONFIG_HOME", "XDG_DATA_HOME"],
+            || {
+                let config = Config::new(&get_random_string());
+                let create_result = tokio_test::block_on(config.create_all_async());
+                assert!(create_result.is_ok());
+                let remove_result = tokio_test::block_on(config.remove_all_async());
                 assert!(remove_result.is_ok());
             },
         );

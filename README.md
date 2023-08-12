@@ -30,4 +30,6 @@ fn main() {
 }
 ```
 
+Any directory `create` and `remove` methods can have an async counterpart provided by the `async` feature.
+
 For further details, refer to installation instructions on [crates.io](https://crates.io/crates/config-better) and docs on [docs.rs](https://docs.rs/config-better).
