@@ -1,5 +1,6 @@
 use std::{
-    fmt, fs,
+    fmt::{self, Display},
+    fs,
     path::{Path, PathBuf},
 };
 
@@ -7,16 +8,64 @@ use errors::{CreateError, RemoveError};
 
 mod errors;
 
+#[derive(Debug, Clone)]
+pub struct Directory {
+    path: PathBuf,
+}
+
+impl Directory {
+    pub(crate) fn new(path: PathBuf) -> Directory {
+        Directory { path }
+    }
+
+    pub fn create(&self) -> std::io::Result<()> {
+        fs::create_dir_all(&self.path)
+    }
+
+    pub fn remove(&self) -> std::io::Result<()> {
+        fs::remove_dir_all(&self.path)
+    }
+}
+
+impl Display for Directory {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.path.display())
+    }
+}
+
 pub struct Config {
-    cache_dir: PathBuf,
-    config_dir: PathBuf,
-    data_dir: PathBuf,
+    /// The cache directory for your application.
+    ///
+    /// The expected path is as follows for an app called "do-stuff":
+    /// * If `$XDG_CACHE_HOME` is defined: `$XDG_CACHE_HOME/do-stuff`
+    /// * If the OS is Windows: `%APPDATA%/do-stuff/Cache`
+    /// * If the OS is MacOS: `$HOME/Library/Caches/do-stuff`
+    /// * Otherwise: `$HOME/.cache/do-stuff`
+    pub cache: Directory,
+
+    /// The config directory for your application.
+    ///
+    /// The expected path is as follows for an app called "do-stuff":
+    /// * If `$XDG_CONFIG_HOME` is defined: `$XDG_CONFIG_HOME/do-stuff`
+    /// * If the OS is Windows: `%APPDATA%/do-stuff/Config`
+    /// * If the OS is MacOS: `$HOME/Library/Preferences/do-stuff`
+    /// * Otherwise: `$HOME/.config/do-stuff`
+    pub config: Directory,
+
+    /// The data directory for your application.
+    ///
+    /// The expected path is as follows for an app called "do-stuff":
+    /// * If `$XDG_DATA_HOME` is defined: `$XDG_DATA_HOME/do-stuff`
+    /// * If the OS is Windows: `%APPDATA%/do-stuff/Data`
+    /// * If the OS is MacOS: `$HOME/Library/do-stuff`
+    /// * Otherwise: `$HOME/.local/share/do-stuff`
+    pub data: Directory,
 }
 
 impl Config {
     fn _init(app_name: &str, os: &str) -> Config {
         Config {
-            cache_dir: match std::env::var("XDG_CACHE_HOME") {
+            cache: Directory::new(match std::env::var("XDG_CACHE_HOME") {
                 Ok(dir) => Path::new(&dir).join(app_name),
                 Err(_) => match os {
                     "windows" => Path::new(&std::env::var("APPDATA").unwrap_or(".".to_string()))
@@ -30,8 +79,8 @@ impl Config {
                         .join(".cache")
                         .join(app_name),
                 },
-            },
-            config_dir: match std::env::var("XDG_CONFIG_HOME") {
+            }),
+            config: Directory::new(match std::env::var("XDG_CONFIG_HOME") {
                 Ok(dir) => Path::new(&dir).join(app_name),
                 Err(_) => match os {
                     "windows" => Path::new(&std::env::var("APPDATA").unwrap_or(".".to_string()))
@@ -45,8 +94,8 @@ impl Config {
                         .join(".config")
                         .join(app_name),
                 },
-            },
-            data_dir: match std::env::var("XDG_DATA_HOME") {
+            }),
+            data: Directory::new(match std::env::var("XDG_DATA_HOME") {
                 Ok(dir) => Path::new(&dir).join(app_name),
                 Err(_) => match os {
                     "windows" => Path::new(&std::env::var("APPDATA").unwrap_or(".".to_string()))
@@ -60,7 +109,7 @@ impl Config {
                         .join("share")
                         .join(app_name),
                 },
-            },
+            }),
         }
     }
 
@@ -75,48 +124,12 @@ impl Config {
         Config::_init(app_name, std::env::consts::OS)
     }
 
-    /// Returns a &PathBuf pointed at the appropriate directory to use for
-    /// storing cache data.
-    ///
-    /// The expected path as follows for an app called "do-stuff" is this:
-    /// * If `$XDG_CACHE_HOME` is defined, this returns `$XDG_CACHE_HOME/do-stuff`
-    /// * If the OS is Windows, this returns `%APPDATA%/do-stuff/Cache`
-    /// * If the OS is MacOS, this returns `$HOME/Library/Caches/do-stuff`
-    /// * Otherwise, this returns `$HOME/.cache/do-stuff`
-    pub fn cache(&self) -> &PathBuf {
-        &self.cache_dir
-    }
-
-    /// Returns a &PathBuf pointed at the appropriate directory to use for
-    /// storing configuration data.
-    ///
-    /// The expected path as follows for an app called "do-stuff" is this:
-    /// * If `$XDG_CONFIG_HOME` is defined, this returns `$XDG_CONFIG_HOME/do-stuff`
-    /// * If the OS is Windows, this returns `%APPDATA%/do-stuff/Config`
-    /// * If the OS is MacOS, this returns `$HOME/Library/Preferences/do-stuff`
-    /// * Otherwise, this returns `$HOME/.config/do-stuff`
-    pub fn config(&self) -> &PathBuf {
-        &self.config_dir
-    }
-
-    /// Returns a &PathBuf pointed at the appropriate directory to use for
-    /// storing any data (likely that isn't considered cache/config data).
-    ///
-    /// The expected path as follows for an app called "do-stuff" is this:
-    /// * If `$XDG_DATA_HOME` is defined, this returns `$XDG_DATA_HOME/do-stuff`
-    /// * If the OS is Windows, this returns `%APPDATA%/do-stuff/Data`
-    /// * If the OS is MacOS, this returns `$HOME/Library/do-stuff`
-    /// * Otherwise, this returns `$HOME/.local/share/do-stuff`
-    pub fn data(&self) -> &PathBuf {
-        &self.data_dir
-    }
-
     /// Attempts to create all directories. The error produced indicates which
     /// directory failed to be created first, in the order Cache -> Config -> Data.
     pub fn make_dirs(&self) -> Result<(), CreateError> {
-        fs::create_dir_all(self.cache_dir.as_path()).map_err(CreateError::Cache)?;
-        fs::create_dir_all(self.config_dir.as_path()).map_err(CreateError::Config)?;
-        fs::create_dir_all(self.data_dir.as_path()).map_err(CreateError::Data)?;
+        self.cache.create().map_err(CreateError::Cache)?;
+        self.config.create().map_err(CreateError::Config)?;
+        self.data.create().map_err(CreateError::Data)?;
 
         Ok(())
     }
@@ -124,9 +137,9 @@ impl Config {
     /// Attemps to remove all directories. The error produced indicates which
     /// directory failed to be removed first, in the order Cache -> Config -> Data.
     pub fn rm_dirs(&self) -> Result<(), RemoveError> {
-        fs::remove_dir_all(self.cache_dir.as_path()).map_err(RemoveError::Cache)?;
-        fs::remove_dir_all(self.config_dir.as_path()).map_err(RemoveError::Config)?;
-        fs::remove_dir_all(self.data_dir.as_path()).map_err(RemoveError::Data)?;
+        self.cache.remove().map_err(RemoveError::Cache)?;
+        self.config.remove().map_err(RemoveError::Config)?;
+        self.data.remove().map_err(RemoveError::Data)?;
 
         Ok(())
     }
@@ -137,7 +150,7 @@ impl fmt::Debug for Config {
         write!(
             f,
             "Config {{ cache_dir: {:?}, config_dir: {:?}, data_dir: {:?} }}",
-            self.cache_dir, self.config_dir, self.data_dir
+            self.cache.path, self.config.path, self.data.path
         )
     }
 }
@@ -211,20 +224,14 @@ mod tests {
     fn it_respects_xdg_cache_home() {
         temp_env::with_vars([("XDG_CACHE_HOME", Some(path!("/tmp/cache")))], || {
             let config = Config::_init("app-name", "any");
-            assert_eq!(
-                config.cache().to_str().unwrap(),
-                path!("/tmp/cache/app-name")
-            );
+            assert_eq!(config.cache.to_string(), path!("/tmp/cache/app-name"));
         });
     }
 
     #[test]
     fn it_uses_expected_windows_cache_path() {
         with_windows_config(|c| {
-            assert_eq!(
-                c.cache().to_str().unwrap(),
-                path!("/appdata/app-name/Cache")
-            );
+            assert_eq!(c.cache.to_string(), path!("/appdata/app-name/Cache"));
         });
     }
 
@@ -232,7 +239,7 @@ mod tests {
     fn it_uses_expected_macos_cache_path() {
         with_macos_config(|c| {
             assert_eq!(
-                c.cache().to_str().unwrap(),
+                c.cache.to_string(),
                 path!("/home/user/Library/Caches/app-name")
             );
         });
@@ -241,10 +248,7 @@ mod tests {
     #[test]
     fn it_uses_expected_linux_cache_path() {
         with_linux_config(|c| {
-            assert_eq!(
-                c.cache().to_str().unwrap(),
-                path!("/home/user/.cache/app-name")
-            );
+            assert_eq!(c.cache.to_string(), path!("/home/user/.cache/app-name"));
         });
     }
 
@@ -252,20 +256,14 @@ mod tests {
     fn it_respects_xdg_config_home() {
         temp_env::with_vars([("XDG_CONFIG_HOME", Some(path!("/tmp/config")))], || {
             let config = Config::_init("app-name", "any");
-            assert_eq!(
-                config.config().to_str().unwrap(),
-                path!("/tmp/config/app-name")
-            );
+            assert_eq!(config.config.to_string(), path!("/tmp/config/app-name"));
         });
     }
 
     #[test]
     fn it_uses_expected_windows_config_path() {
         with_windows_config(|c| {
-            assert_eq!(
-                c.config().to_str().unwrap(),
-                path!("/appdata/app-name/Config")
-            );
+            assert_eq!(c.config.to_string(), path!("/appdata/app-name/Config"));
         });
     }
 
@@ -273,7 +271,7 @@ mod tests {
     fn it_uses_expected_macos_config_path() {
         with_macos_config(|c| {
             assert_eq!(
-                c.config().to_str().unwrap(),
+                c.config.to_string(),
                 path!("/home/user/Library/Preferences/app-name")
             );
         });
@@ -282,10 +280,7 @@ mod tests {
     #[test]
     fn it_uses_expected_linux_config_path() {
         with_linux_config(|c| {
-            assert_eq!(
-                c.config().to_str().unwrap(),
-                path!("/home/user/.config/app-name")
-            );
+            assert_eq!(c.config.to_string(), path!("/home/user/.config/app-name"));
         });
     }
 
@@ -293,24 +288,21 @@ mod tests {
     fn it_respects_xdg_data_home() {
         temp_env::with_vars([("XDG_DATA_HOME", Some(path!("/tmp/data")))], || {
             let config = Config::_init("app-name", "any");
-            assert_eq!(config.data().to_str().unwrap(), path!("/tmp/data/app-name"));
+            assert_eq!(config.data.to_string(), path!("/tmp/data/app-name"));
         });
     }
 
     #[test]
     fn it_uses_expected_windows_data_path() {
         with_windows_config(|c| {
-            assert_eq!(c.data().to_str().unwrap(), path!("/appdata/app-name/Data"));
+            assert_eq!(c.data.to_string(), path!("/appdata/app-name/Data"));
         });
     }
 
     #[test]
     fn it_uses_expected_macos_data_path() {
         with_macos_config(|c| {
-            assert_eq!(
-                c.data().to_str().unwrap(),
-                path!("/home/user/Library/app-name")
-            );
+            assert_eq!(c.data.to_string(), path!("/home/user/Library/app-name"));
         });
     }
 
@@ -318,7 +310,7 @@ mod tests {
     fn it_uses_expected_linux_data_path() {
         with_linux_config(|c| {
             assert_eq!(
-                c.data().to_str().unwrap(),
+                c.data.to_string(),
                 path!("/home/user/.local/share/app-name")
             );
         });
