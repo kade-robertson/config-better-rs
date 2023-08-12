@@ -291,7 +291,7 @@ mod tests {
     #[test]
     fn it_respects_xdg_config_home() {
         let mut env = OverridableEnv::new();
-        env.add("XDG_CONFIG_HOME", "/tmp/config");
+        env.add("XDG_CONFIG_HOME", &path!("/tmp/config"));
         let config = Config::_init("app-name", "any", env);
         assert_eq!(
             config.config().to_str().unwrap(),
@@ -330,7 +330,7 @@ mod tests {
     #[test]
     fn it_respects_xdg_data_home() {
         let mut env = OverridableEnv::new();
-        env.add("XDG_DATA_HOME", "/tmp/data");
+        env.add("XDG_DATA_HOME", &path!("/tmp/data"));
         let config = Config::_init("app-name", "any", env);
         assert_eq!(config.data().to_str().unwrap(), path!("/tmp/data/app-name"));
     }
