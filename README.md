@@ -33,3 +33,8 @@ fn main() {
 Any directory `create` and `remove` methods can have an async counterpart provided by the `async` feature.
 
 For further details, refer to installation instructions on [crates.io](https://crates.io/crates/config-better) and docs on [docs.rs](https://docs.rs/config-better).
+
+### MSRV
+
+For the `sync` feature of the crate, the MSRV is 1.60.0.
+For the `async` feature of the crate, the MSRV is largely dictated by `tokio`. This is currently 1.63.0.

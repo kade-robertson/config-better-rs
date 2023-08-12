@@ -37,7 +37,13 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        rust-version: [1.60.0, stable]
+        rust-version: [1.60.0, 1.63.0, stable]
+        features: ["sync", "async"]
+        exclude:
+          - rust-version: 1.60.0
+            features: "async"
+          - rust-version: 1.63.0
+            features: "sync"
     steps:
       - uses: actions/checkout@v3
 
@@ -51,7 +57,4 @@ jobs:
         uses: mozilla-actions/sccache-action@v0.0.3
 
       - name: Build
-        run: cargo build --release --all-features
-
-      - name: Publish
-        run: cargo publish --dry-run
+        run: cargo build --release --no-default-features --features ${{ matrix.features }}
