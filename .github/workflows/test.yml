@@ -40,10 +40,10 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        rust-version: [1.60.0, 1.63.0, stable]
+        rust-version: [1.61.0, 1.63.0, stable]
         features: ["sync", "async", "async-tokio"]
         exclude:
-          - rust-version: 1.60.0
+          - rust-version: 1.61.0
             features: "async-tokio"
           - rust-version: 1.63.0
             features: "sync"

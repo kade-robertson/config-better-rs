@@ -2,7 +2,7 @@
 name = "config-better"
 version = "1.1.0"
 edition = "2021"
-rust-version = "1.60.0"
+rust-version = "1.61"
 license = "MIT"
 description = "Configure your application in a friendlier and more consistent way!"
 homepage = "https://github.com/kade-robertson/config-better-rs"
