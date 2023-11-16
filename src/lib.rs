@@ -12,6 +12,7 @@ use errors::{CreateError, RemoveError};
 mod directory;
 mod errors;
 
+#[derive(Clone)]
 pub struct Config {
     /// The cache directory for your application.
     ///
