@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.2.0](https://github.com/kade-robertson/config-better-rs/compare/v1.1.0...v1.2.0) (2023-11-16)
+
+
+### Features
+
+* allow cloning config ([0bd95a4](https://github.com/kade-robertson/config-better-rs/commit/0bd95a4cb8bfbc2725a9cb41423d816595816017))
+* allow cloning config ([#4](https://github.com/kade-robertson/config-better-rs/issues/4)) ([0bd95a4](https://github.com/kade-robertson/config-better-rs/commit/0bd95a4cb8bfbc2725a9cb41423d816595816017))
+
+
+### Bug Fixes
+
+* bump msrv for memchr ([0bd95a4](https://github.com/kade-robertson/config-better-rs/commit/0bd95a4cb8bfbc2725a9cb41423d816595816017))
+
 ## [1.1.0](https://github.com/kade-robertson/config-better-rs/compare/v1.0.0...v1.1.0) (2023-08-12)
 
 
