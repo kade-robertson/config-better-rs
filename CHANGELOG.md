@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.3.0](https://github.com/kade-robertson/config-better-rs/compare/v1.2.0...v1.3.0) (2024-11-29)
+
+
+### Bug Fixes
+
+* bump msrv to 1.63 ([#8](https://github.com/kade-robertson/config-better-rs/issues/8)) ([ecf9213](https://github.com/kade-robertson/config-better-rs/commit/ecf9213223b76ed7cc6c38d853fdadac9eee3100))
+* **deps:** support thiserror 2 ([#10](https://github.com/kade-robertson/config-better-rs/issues/10)) ([63f9bad](https://github.com/kade-robertson/config-better-rs/commit/63f9bad7a84e3aa8f171bbfc0e9baf11068bf530))
+
 ## [1.2.0](https://github.com/kade-robertson/config-better-rs/compare/v1.1.0...v1.2.0) (2023-11-16)
 
 
