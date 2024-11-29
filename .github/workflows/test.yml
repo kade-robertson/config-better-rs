@@ -64,3 +64,24 @@ jobs:
 
       - name: Build (async-tokio)
         run: cargo build --release --features async-tokio
+  msrv:
+    name: msrv
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v3
+
+      - id: toolchain
+        name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Run sccache-cache
+        uses: mozilla-actions/sccache-action@v0.0.3
+
+      - name: Install cargo-msrv
+        run: cargo install cargo-msrv --locked
+
+      - name: Verify MSRV
+        run: cargo msrv verify
