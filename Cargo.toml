@@ -2,7 +2,7 @@
 name = "config-better"
 version = "1.2.0"
 edition = "2021"
-rust-version = "1.61"
+rust-version = "1.63"
 license = "MIT"
 description = "Configure your application in a friendlier and more consistent way!"
 homepage = "https://github.com/kade-robertson/config-better-rs"
@@ -18,10 +18,13 @@ thiserror = "1.0.44"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [dev-dependencies]
-tokio = { version = "1.31.0", features = ["fs", "macros", "rt"] }
 async-std = "1.12.0"
+async-stream = "=0.3.5"
 rand = "0.8.4"
 temp-env = "0.3.4"
+tokio = { version = "1.31.0", features = ["fs", "macros", "rt"] }
+tokio-macros = "=2.3.0"
+tokio-stream = "=0.1.15"
 tokio-test = "0.4.2"
 
 [features]

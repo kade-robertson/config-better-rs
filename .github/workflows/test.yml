@@ -16,7 +16,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        rust-version: [stable]
+        rust-version: [1.63.0, stable]
     steps:
       - uses: actions/checkout@v3
 
@@ -29,26 +29,21 @@ jobs:
       - name: Run sccache-cache
         uses: mozilla-actions/sccache-action@v0.0.3
 
-      - name: Test (async-std)
-        run: cargo test --features sync,async
+      - name: Test (sync)
+        run: cargo test
 
-      - name: Test (tokio)
-        run: cargo test --features sync,async-tokio
+      - name: Test (async)
+        run: cargo test --features async
+
+      - name: Test (async-tokio)
+        run: cargo test --features async-tokio
   build:
     name: build
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        rust-version: [1.61.0, 1.63.0, stable]
-        features: ["sync", "async", "async-tokio"]
-        exclude:
-          - rust-version: 1.61.0
-            features: "async-tokio"
-          - rust-version: 1.63.0
-            features: "sync"
-          - rust-version: 1.63.0
-            features: "async"
+        rust-version: [1.63.0, stable]
     steps:
       - uses: actions/checkout@v3
 
@@ -61,5 +56,34 @@ jobs:
       - name: Run sccache-cache
         uses: mozilla-actions/sccache-action@v0.0.3
 
-      - name: Build
-        run: cargo build --release --features ${{ matrix.features }}
+      - name: Build (sync)
+        run: cargo build --release
+
+      - name: Build (async)
+        run: cargo build --release --features async
+
+      - name: Build (async-tokio)
+        run: cargo build --release --features async-tokio
+  msrv:
+    name: msrv
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v3
+
+      - id: toolchain
+        name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Run sccache-cache
+        uses: mozilla-actions/sccache-action@v0.0.3
+
+      - name: Install cargo-msrv
+        run: |
+          curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash
+          cargo binstall --no-confirm cargo-msrv
+
+      - name: Verify MSRV
+        run: cargo msrv verify
