@@ -36,5 +36,4 @@ For further details, refer to installation instructions on [crates.io](https://c
 
 ### MSRV
 
-For the `sync` and `async` features of the crate, the MSRV is 1.61.0.
-For the `async-tokio` feature of the crate, the MSRV is 1.63.0.
+The MSRV is 1.63.
