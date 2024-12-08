@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.1](https://github.com/kade-robertson/config-better-rs/compare/v1.3.0...v1.3.1) (2024-12-08)
+
+
+### Bug Fixes
+
+* **deps:** commit lockfile to pin versions as per recommendation ([#15](https://github.com/kade-robertson/config-better-rs/issues/15)) ([977b353](https://github.com/kade-robertson/config-better-rs/commit/977b35303d175cd12de9531a81fbd62a66292095))
+
 ## [1.3.0](https://github.com/kade-robertson/config-better-rs/compare/v1.2.0...v1.3.0) (2024-11-29)
 
 
